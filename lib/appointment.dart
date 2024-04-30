@@ -6,17 +6,21 @@ import 'dart:collection';
 import 'package:table_calendar/table_calendar.dart';
 
 /// Example event class.
-class AtendimentoModel {
+class Appointment {
   final String title;
-  final DateTime? startAt;
-  final DateTime? endAt;
+  final DateTime startAt;
+  final DateTime endAt;
 
-  const AtendimentoModel(this.title, this.startAt, this.endAt);
+  const Appointment({
+    this.title = '',
+    required this.startAt,
+    required this.endAt,
+  });
 
   @override
   String toString() => title;
 
-  Duration get duration => endAt!.difference(startAt!);
+  Duration get duration => endAt.difference(startAt);
   int get durationInMinutes => duration.inMinutes;
   int get eventSize => durationInMinutes ~/ 15;
 }
