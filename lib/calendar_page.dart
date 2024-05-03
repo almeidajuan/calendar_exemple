@@ -107,7 +107,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   return MyEventCell(
                     date: cell.date,
                   )
-                      .animate(delay: 100.ms * cell.i)
+                      .animate(delay: 100.ms * cell.j)
                       .scaleXY(begin: 1.1)
                       .fadeIn();
                 },
@@ -231,7 +231,7 @@ class EventTable extends StatelessWidget {
       return startAt.date.difference(startOfWeek.date).inDays;
     }
 
-    Cell getCell(int iDay, int jCell) {
+    Cell cellOf(int iDay, int jCell) {
       final minutes = startTime.inMinutes + (timeUnit.inMinutes * jCell);
       final date = startOfWeek.add(Duration(days: iDay, minutes: minutes));
 
@@ -260,7 +260,7 @@ class EventTable extends StatelessWidget {
                           SizedBox(
                             height: height,
                             width: width,
-                            child: cellBuilder(getCell(iDay, jCell)),
+                            child: cellBuilder(cellOf(iDay, jCell)),
                           ),
                       ],
                     ),
