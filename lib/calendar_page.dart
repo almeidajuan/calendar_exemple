@@ -17,52 +17,6 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   DateTime selectedDate = DateTime.now();
 
-  var tableCells = <List<CellModel>>[];
-
-  var timeUnit = 5;
-  var timeUnitInHours = 10;
-
-  List<List<CellModel>> tableData(
-    List<Event> list,
-    DateTime startDay,
-  ) {
-    return List.generate(
-      timeUnitInHours * (60 ~/ timeUnit),
-      (i) => List.generate(
-        7,
-        (j) {
-          var type = CellType.none;
-          final day = startDay.add(Duration(days: j, minutes: timeUnit * i));
-          final appointment = list.firstOrNullWhere(
-            (e) {
-              return (day.isAfter(e.startAt) ||
-                      day.isAtSameMomentAs(e.startAt)) &&
-                  (day.isBefore(e.endAt));
-            },
-          );
-
-          if (appointment != null) {
-            if (appointment.eventSize == 1) {
-              type = CellType.filled;
-            } else if (day.isAtSameMomentAs(appointment.startAt)) {
-              type = CellType.start;
-            } else if (day
-                .isAtSameMomentAs(appointment.endAt - timeUnit.minutes)) {
-              type = CellType.end;
-            } else {
-              type = CellType.middle;
-            }
-          }
-          return CellModel(
-            (i, j),
-            clinicalAppointment: appointment,
-            type: type,
-          );
-        },
-      ),
-    );
-  }
-
   List<Event> clinicalAppointments = [
     Event(
       title: 'Event 01',
@@ -80,20 +34,6 @@ class _CalendarPageState extends State<CalendarPage> {
       endAt: DateTime.utc(2024, 05, 02, 10, 45),
     ),
   ];
-
-  @override
-  void initState() {
-    tableCells =
-        tableData(clinicalAppointments, DateTime.utc(2024, 04, 28, 08, 00));
-    super.initState();
-  }
-
-  @override
-  void reassemble() {
-    tableCells =
-        tableData(clinicalAppointments, DateTime.utc(2024, 04, 28, 08, 00));
-    super.reassemble();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,6 +103,19 @@ class _CalendarPageState extends State<CalendarPage> {
               child: EventTable(
                 startOfWeek: DateTime(2024, 4, 28),
                 timeUnit: 30.minutes,
+                cellBuilder: (cell) {
+                  return MyEventCell(
+                    date: cell.date,
+                  )
+                      .animate(delay: 100.ms * cell.i)
+                      .scaleXY(begin: 1.1)
+                      .fadeIn();
+                },
+                eventBuilder: (index, event) {
+                  return MyEventCard(
+                    event: event,
+                  ).animate(delay: 600.ms * index).scaleXY(begin: 1.1).fadeIn();
+                },
                 events: [
                   Event(
                     title: 'Event 01',
@@ -194,6 +147,35 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 }
 
+class MyEventCell extends StatelessWidget {
+  const MyEventCell({
+    super.key,
+    required this.date,
+  });
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    return SuperHero(
+      maxHeigth: 600,
+      maxWidth: 400,
+      child: LayoutBuilder(builder: (context, constraints) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            TimeOfDay.fromDateTime(date).format(context),
+          ),
+        );
+      }),
+    );
+  }
+}
+
 class EventTable extends StatelessWidget {
   const EventTable({
     super.key,
@@ -203,6 +185,8 @@ class EventTable extends StatelessWidget {
     this.startTime = const TimeOfDay(hour: 8, minute: 0),
     this.endTime = const TimeOfDay(hour: 18, minute: 0),
     this.cellHeight = 24.0,
+    required this.cellBuilder,
+    required this.eventBuilder,
   });
   final DateTime startOfWeek;
   final Duration timeUnit;
@@ -210,6 +194,8 @@ class EventTable extends StatelessWidget {
   final TimeOfDay endTime;
   final double cellHeight;
   final List<Event> events;
+  final Widget Function(Cell cell) cellBuilder;
+  final Widget Function(int index, Event event) eventBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +211,14 @@ class EventTable extends StatelessWidget {
     int leftDistance(DateTime startAt) {
       // we ignore the time of the day
       return startAt.date.difference(startOfWeek.date).inDays;
+    }
+
+    Cell cell(int i, int j) {
+      final date = startOfWeek.add(
+        Duration(days: j, minutes: timeUnit.inMinutes * i),
+      );
+
+      return Cell(i, j, date);
     }
 
     final cellRatio = 60 / timeUnit.inMinutes;
@@ -246,22 +240,10 @@ class EventTable extends StatelessWidget {
                     Row(
                       children: [
                         for (var j = 0; j < 7; j++)
-                          SuperHero(
-                            maxHeigth: 600,
-                            maxWidth: 400,
-                            child: Container(
-                              height: height,
-                              width: width,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              // time:
-                              child: Text(
-                                '${(startTime.inMinutes + (i * timeUnit.inMinutes)) ~/ 60}:${(startTime.inMinutes + (i * timeUnit.inMinutes)) % 60}',
-                              ),
-                            ),
+                          SizedBox(
+                            height: height,
+                            width: width,
+                            child: cellBuilder(cell(i, j)),
                           ),
                       ],
                     ),
@@ -273,17 +255,38 @@ class EventTable extends StatelessWidget {
                   left: leftDistance(event.startAt) * width,
                   height: (event.inMinutes / timeUnit.inMinutes) * height,
                   width: width,
-                  child: SuperHero(
-                    maxHeigth: 600,
-                    maxWidth: 400,
-                    child: EventCard(event: event),
-                  ),
-                ).animate(delay: 200.ms * index).scaleXY(begin: 1.1).fadeIn(),
+                  child: eventBuilder(index, event),
+                ),
             ],
           ),
         ),
       );
     });
+  }
+}
+
+class AnimatedHover extends StatefulWidget {
+  const AnimatedHover({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<AnimatedHover> createState() => _AnimatedHoverState();
+}
+
+class _AnimatedHoverState extends State<AnimatedHover> {
+  bool isHovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovering = true),
+      onExit: (_) => setState(() => isHovering = false),
+      child: AnimatedScale(
+        duration: 300.ms,
+        scale: isHovering ? 1.1 : 1.0,
+        child: widget.child,
+      ),
+    );
   }
 }
 
@@ -336,38 +339,61 @@ class SuperHero extends StatelessWidget {
           ),
         );
       },
-      child: Hero(
-        tag: hashCode,
-        child: Material(
-          type: MaterialType.transparency,
-          child: child,
+      child: AnimatedHover(
+        child: Hero(
+          tag: hashCode,
+          child: Material(
+            type: MaterialType.transparency,
+            child: child,
+          ),
         ),
       ),
     );
   }
 }
 
-class EventCard extends StatelessWidget {
-  const EventCard({super.key, required this.event});
+class MyEventCard extends StatelessWidget {
+  const MyEventCard({
+    super.key,
+    required this.event,
+  });
   final Event event;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.blue,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(event.title),
-            Text('${event.inMinutes} minutos'),
-          ],
-        ),
-      ),
+    return SuperHero(
+      maxHeigth: 600,
+      maxWidth: 400,
+      child: LayoutBuilder(builder: (context, constraints) {
+        final isOpen = constraints.maxHeight > 200;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(event.title),
+                Text('${event.inMinutes} minutos'),
+                if (isOpen)
+                  Column(
+                    children: [
+                      TextFormField(),
+                      TextFormField(),
+                      TextFormField(),
+                      TextFormField(),
+                      TextFormField(),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -378,6 +404,13 @@ extension on DateTime {
 
 extension on TimeOfDay {
   int get inMinutes => hour * 60 + minute;
+}
+
+class Cell {
+  Cell(this.i, this.j, this.date);
+  final int i;
+  final int j;
+  final DateTime date;
 }
 
 class SelectWeek extends StatelessWidget {
@@ -506,80 +539,4 @@ class WeekDays extends StatelessWidget {
       ),
     );
   }
-}
-
-class Cell extends StatelessWidget {
-  const Cell({
-    super.key,
-    required this.clinicalAppointment,
-    required this.type,
-  });
-
-  final Event? clinicalAppointment;
-  final CellType type;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(3),
-      decoration: type.boxDecoration.copyWith(
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      height: 32,
-      width: 100,
-      child: Center(
-        child: Text(
-          clinicalAppointment?.title ?? '',
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-}
-
-enum CellType {
-  start(
-    BoxDecoration(
-      color: Color(0xFFFFF0E8),
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(10),
-      ),
-    ),
-  ),
-  middle(BoxDecoration(color: Color(0xFFFFF0E8))),
-  end(
-    BoxDecoration(
-      color: Color(0xFFFFF0E8),
-      borderRadius: BorderRadius.vertical(
-        bottom: Radius.circular(10),
-      ),
-    ),
-  ),
-
-  filled(
-    BoxDecoration(
-      color: Color(0xFFFFF0E8),
-      borderRadius: BorderRadius.all(
-        Radius.circular(10),
-      ),
-    ),
-  ),
-
-  none(BoxDecoration());
-
-  const CellType(this.boxDecoration);
-
-  final BoxDecoration boxDecoration;
-}
-
-class CellModel {
-  final Event? clinicalAppointment;
-  final CellType type;
-  final (int i, int j) position;
-
-  const CellModel(
-    this.position, {
-    required this.clinicalAppointment,
-    required this.type,
-  });
 }
