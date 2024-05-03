@@ -161,14 +161,32 @@ class MyEventCell extends StatelessWidget {
       maxHeigth: 600,
       maxWidth: 400,
       child: LayoutBuilder(builder: (context, constraints) {
+        final isOpen = constraints.maxHeight > 200;
+
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
             border: Border.all(color: Colors.grey.shade300),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Text(
-            TimeOfDay.fromDateTime(date).format(context),
+          child: Column(
+            children: [
+              Text(
+                TimeOfDay.fromDateTime(date).format(context),
+              ),
+              if (isOpen)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(date.toString()),
+                    TextFormField(),
+                    TextFormField(),
+                    TextFormField(),
+                    TextFormField(),
+                    TextFormField(),
+                  ],
+                ),
+            ],
           ),
         );
       }),
@@ -213,12 +231,11 @@ class EventTable extends StatelessWidget {
       return startAt.date.difference(startOfWeek.date).inDays;
     }
 
-    Cell cell(int i, int j) {
-      final date = startOfWeek.add(
-        Duration(days: j, minutes: timeUnit.inMinutes * i),
-      );
+    Cell getCell(int iDay, int jCell) {
+      final minutes = startTime.inMinutes + (timeUnit.inMinutes * jCell);
+      final date = startOfWeek.add(Duration(days: iDay, minutes: minutes));
 
-      return Cell(i, j, date);
+      return Cell(iDay, jCell, date);
     }
 
     final cellRatio = 60 / timeUnit.inMinutes;
@@ -233,17 +250,17 @@ class EventTable extends StatelessWidget {
           height: cellCount * height,
           child: Stack(
             children: [
-              Column(
+              Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  for (var i = 0; i < cellCount; i++)
-                    Row(
+                  for (var iDay = 0; iDay < 7; iDay++)
+                    Column(
                       children: [
-                        for (var j = 0; j < 7; j++)
+                        for (var jCell = 0; jCell < cellCount; jCell++)
                           SizedBox(
                             height: height,
                             width: width,
-                            child: cellBuilder(cell(i, j)),
+                            child: cellBuilder(getCell(iDay, jCell)),
                           ),
                       ],
                     ),
@@ -408,8 +425,14 @@ extension on TimeOfDay {
 
 class Cell {
   Cell(this.i, this.j, this.date);
+
+  /// Day of the week (0-6).
   final int i;
+
+  /// Cell of the day (0-N). Depends on the time unit.
   final int j;
+
+  /// The date of the cell. (Start time)
   final DateTime date;
 }
 
