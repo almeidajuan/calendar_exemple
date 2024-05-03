@@ -38,6 +38,7 @@ dependencies:
   intl: ^0.19.0
   table_calendar: ^3.1.1
   dartx: ^1.2.0
+  flutter_animate: ^4.5.0
 
 dev_dependencies:
   flutter_test:

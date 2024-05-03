@@ -3,15 +3,13 @@
 
 import 'dart:collection';
 
-import 'package:table_calendar/table_calendar.dart';
-
 /// Example event class.
-class Appointment {
+class Event {
   final String title;
   final DateTime startAt;
   final DateTime endAt;
 
-  const Appointment({
+  const Event({
     this.title = '',
     required this.startAt,
     required this.endAt,
@@ -21,8 +19,8 @@ class Appointment {
   String toString() => title;
 
   Duration get duration => endAt.difference(startAt);
-  int get durationInMinutes => duration.inMinutes;
-  int get eventSize => durationInMinutes ~/ 15;
+  int get inMinutes => duration.inMinutes;
+  int get eventSize => inMinutes ~/ 15;
 }
 
 /// Example events.
