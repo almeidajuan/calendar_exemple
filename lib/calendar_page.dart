@@ -15,7 +15,19 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarPageState extends State<CalendarPage> {
-  DateTime selectedDate = DateTime.now();
+  final today = DateTime.now().toUtc();
+
+  late var startOfWeek = today.subtract(Duration(days: today.weekday));
+  late var endOfWeek = startOfWeek.add(Duration(days: 6));
+
+  void setWeek(DateTime date) {
+    startOfWeek = date;
+    endOfWeek = startOfWeek.add(Duration(days: 6));
+
+    setState(() {});
+  }
+
+  void setAppointmentsOfWeek(DateTime firstDay) {}
 
   List<Event> clinicalAppointments = [
     Event(
@@ -56,18 +68,14 @@ class _CalendarPageState extends State<CalendarPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TableCalendar(
-              focusedDay: DateTime.now().toUtc(),
+              focusedDay: startOfWeek,
               firstDay: DateTime.utc(2020, 10, 16),
               lastDay: DateTime.utc(2025, 10, 16),
               daysOfWeekVisible: false,
               locale: 'pt_BR',
-
               calendarBuilders: CalendarBuilders(
                 // * Customized the day
-                prioritizedBuilder: (_, date, __) => WeekDays(
-                  date: date,
-                  selectedDate: selectedDate,
-                ),
+                prioritizedBuilder: (_, date, __) => WeekDays(date: date),
               ),
               headerStyle: const HeaderStyle(
                 titleCentered: true,
@@ -77,69 +85,56 @@ class _CalendarPageState extends State<CalendarPage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              // calendarStyle: CalendarStyle(
-              //   todayDecoration: const BoxDecoration(
-              //     color: Colors.blue,
-              //     shape: BoxShape.circle,
-              //   ),
-              //   selectedDecoration: BoxDecoration(
-              //     color: Colors.blue[200],
-              //     shape: BoxShape.circle,
-              //   ),
-              //   selectedTextStyle: TextStyle(color: Colors.black),
-              //   todayTextStyle: TextStyle(color: Colors.white),
-              // ),
+              onPageChanged: (focusedDay) {
+                setWeek(focusedDay);
+              },
               rowHeight: 64,
               calendarFormat: CalendarFormat.week,
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() => selectedDate = selectedDay);
-              },
-              selectedDayPredicate: (day) {
-                return isSameDay(selectedDate, day);
-              },
             ),
             SizedBox(height: 8),
-            Expanded(
-              child: EventTable(
-                startOfWeek: DateTime(2024, 4, 28),
-                timeUnit: 30.minutes,
-                cellBuilder: (cell) {
-                  return MyEventCell(
-                    date: cell.date,
-                  )
-                      .animate(delay: 100.ms * cell.j)
-                      .scaleXY(begin: 1.1)
-                      .fadeIn();
-                },
-                eventBuilder: (index, event) {
-                  return MyEventCard(
-                    event: event,
-                  ).animate(delay: 600.ms * index).scaleXY(begin: 1.1).fadeIn();
-                },
-                events: [
-                  Event(
-                    title: 'Event 01',
-                    startAt: DateTime.utc(2024, 04, 28, 08, 00),
-                    endAt: DateTime.utc(2024, 04, 28, 09, 00),
-                  ),
-                  Event(
-                    title: 'Event 02',
-                    startAt: DateTime.utc(2024, 04, 30, 09, 00),
-                    endAt: DateTime.utc(2024, 04, 30, 09, 30),
-                  ),
-                  Event(
-                    title: 'Event 03',
-                    startAt: DateTime.utc(2024, 05, 01, 10, 00),
-                    endAt: DateTime.utc(2024, 05, 01, 11, 45),
-                  ),
-                  Event(
-                    title: 'Event 03',
-                    startAt: DateTime.utc(2024, 05, 02, 10, 00),
-                    endAt: DateTime.utc(2024, 05, 02, 10, 45),
-                  ),
-                ],
-              ),
-            ),
+            Text('Inicio da semana: $startOfWeek'),
+            Text('Fim da semana: $endOfWeek'),
+            // Expanded(
+            //   child: EventTable(
+            //     startOfWeek: DateTime(2024, 4, 28),
+            //     timeUnit: 30.minutes,
+            //     cellBuilder: (cell) {
+            //       return MyEventCell(
+            //         date: cell.date,
+            //       )
+            //           .animate(delay: 100.ms * cell.j)
+            //           .scaleXY(begin: 1.1)
+            //           .fadeIn();
+            //     },
+            //     eventBuilder: (index, event) {
+            //       return MyEventCard(
+            //         event: event,
+            //       ).animate(delay: 600.ms * index).scaleXY(begin: 1.1).fadeIn();
+            //     },
+            //     events: [
+            //       Event(
+            //         title: 'Event 01',
+            //         startAt: DateTime.utc(2024, 04, 28, 08, 00),
+            //         endAt: DateTime.utc(2024, 04, 28, 09, 00),
+            //       ),
+            //       Event(
+            //         title: 'Event 02',
+            //         startAt: DateTime.utc(2024, 04, 30, 09, 00),
+            //         endAt: DateTime.utc(2024, 04, 30, 09, 30),
+            //       ),
+            //       Event(
+            //         title: 'Event 03',
+            //         startAt: DateTime.utc(2024, 05, 01, 10, 00),
+            //         endAt: DateTime.utc(2024, 05, 01, 11, 45),
+            //       ),
+            //       Event(
+            //         title: 'Event 03',
+            //         startAt: DateTime.utc(2024, 05, 02, 10, 00),
+            //         endAt: DateTime.utc(2024, 05, 02, 10, 45),
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -514,11 +509,9 @@ class WeekDays extends StatelessWidget {
   const WeekDays({
     super.key,
     required this.date,
-    required this.selectedDate,
   });
 
   final DateTime date;
-  final DateTime selectedDate;
 
   @override
   Widget build(BuildContext context) {
@@ -530,11 +523,7 @@ class WeekDays extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: (!isSameDay(selectedDate, date) && isSameDay(today, date))
-            ? Colors.grey.shade300
-            : isSameDay(selectedDate, date)
-                ? const Color(0xFF5184E4).withOpacity(0.2)
-                : null,
+        color: isSameDay(today, date) ? Colors.grey.shade300 : null,
       ),
       padding: const EdgeInsets.all(8),
       child: Column(
@@ -542,18 +531,13 @@ class WeekDays extends StatelessWidget {
           Text(
             dayOfWeek,
             style: TextStyle(
-              color: isSameDay(selectedDate, date)
-                  ? const Color(0xFF5184E4)
-                  : Colors.black54,
+              color: Colors.black54,
               fontWeight: FontWeight.w300,
             ),
           ),
           Text(
             dayOfMonth,
             style: TextStyle(
-              color: isSameDay(selectedDate, date)
-                  ? const Color(0xFF5184E4)
-                  : null,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
