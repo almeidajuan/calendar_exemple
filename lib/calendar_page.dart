@@ -75,7 +75,22 @@ class _CalendarPageState extends State<CalendarPage> {
               locale: 'pt_BR',
               calendarBuilders: CalendarBuilders(
                 // * Customized the day
-                prioritizedBuilder: (_, date, __) => WeekDays(date: date),
+                defaultBuilder: (_, day, focused) => SuperHero(
+                  maxHeigth: 600,
+                  maxWidth: 600,
+                  child: MonthDay(
+                    date: day,
+                  ),
+                ),
+                outsideBuilder: (context, day, focusedDay) {
+                  return GestureDetector(
+                    onTap: () {},
+                    child: MonthDay(
+                      disable: true,
+                      date: day,
+                    ),
+                  );
+                },
               ),
               headerStyle: const HeaderStyle(
                 titleCentered: true,
@@ -167,6 +182,7 @@ class MyEventCell extends StatelessWidget {
           child: Column(
             children: [
               Text(
+                // 'Dia ${date.day} às ' +
                 TimeOfDay.fromDateTime(date).format(context),
               ),
               if (isOpen)
@@ -236,12 +252,13 @@ class EventTable extends StatelessWidget {
     final cellRatio = 60 / timeUnit.inMinutes;
     final cellCount = (endTime.hour - startTime.hour) * cellRatio;
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final width = constraints.maxWidth / 7;
-      final height = cellRatio * cellHeight;
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(8.0),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final width = constraints.maxWidth / 7;
+        final height = cellRatio * cellHeight;
 
-      return SingleChildScrollView(
-        child: SizedBox(
+        return Container(
           height: cellCount * height,
           child: Stack(
             children: [
@@ -271,9 +288,9 @@ class EventTable extends StatelessWidget {
                 ),
             ],
           ),
-        ),
-      );
-    });
+        );
+      }),
+    );
   }
 }
 
@@ -382,6 +399,7 @@ class MyEventCard extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: Colors.blue,
+            border: Border.all(color: Colors.black),
             borderRadius: BorderRadius.circular(8),
           ),
           child: SingleChildScrollView(
@@ -410,11 +428,11 @@ class MyEventCard extends StatelessWidget {
   }
 }
 
-extension on DateTime {
+extension DateTimeX on DateTime {
   int get inMinutes => hour * 60 + minute;
 }
 
-extension on TimeOfDay {
+extension TimeOfDayX on TimeOfDay {
   int get inMinutes => hour * 60 + minute;
 }
 
@@ -540,6 +558,50 @@ class WeekDays extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MonthDay extends StatelessWidget {
+  const MonthDay({
+    super.key,
+    required this.date,
+    this.disable = false,
+  });
+
+  final DateTime date;
+  final bool disable;
+
+  @override
+  Widget build(BuildContext context) {
+    final dayOfMonth = date.day.toString().padLeft(2, '0');
+    final today = DateTime.now();
+
+    return Container(
+      height: 400,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+        color: (isSameDay(today, date))
+            ? const Color(0xFF5184E4).withOpacity(0.2)
+            : null,
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        children: [
+          Text(
+            dayOfMonth,
+            style: TextStyle(
+              color: isSameDay(today, date)
+                  ? const Color(0xFF5184E4)
+                  : disable
+                      ? Colors.grey
+                      : Colors.black,
             ),
           ),
         ],
