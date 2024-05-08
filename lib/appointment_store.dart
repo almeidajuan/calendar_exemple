@@ -2,12 +2,12 @@ import 'package:calendar_exemple/cale_format.dart';
 import 'package:calendar_exemple/event.dart';
 import 'package:flutter/material.dart';
 
-class CalendarStore extends ChangeNotifier {
+class AppointmentStore extends ChangeNotifier {
   CaleFormat _calendar = CaleFormat.week;
 
   CaleFormat get calendar => _calendar;
 
-  final List<Event> _clinicalAppointments = [
+  final List<Event> _appointments = [
     Event(
       title: 'Event 01',
       startAt: DateTime.utc(2024, 04, 28, 08, 00),
@@ -25,12 +25,17 @@ class CalendarStore extends ChangeNotifier {
     ),
     Event(
       title: 'Event 03',
-      startAt: DateTime.utc(2024, 05, 02, 10, 00),
-      endAt: DateTime.utc(2024, 05, 02, 10, 45),
+      startAt: DateTime.utc(2024, 05, 07, 10, 00),
+      endAt: DateTime.utc(2024, 05, 07, 10, 45),
     ),
   ];
 
-  List<Event> get clinicalAppointments => _clinicalAppointments;
+  List<Event> get clinicalAppointments => _appointments;
+
+  Future<void> addAppointments(Event event) async {
+    _appointments.add(event);
+    notifyListeners();
+  }
 
   void setCalendar(CaleFormat calendar) {
     _calendar = calendar;
