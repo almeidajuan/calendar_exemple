@@ -4,12 +4,12 @@
 import 'dart:collection';
 
 /// Example event class.
-class Event {
+class Appointment {
   final String title;
   final DateTime startAt;
   final DateTime endAt;
 
-  const Event({
+  const Appointment({
     this.title = '',
     required this.startAt,
     required this.endAt,

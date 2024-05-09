@@ -1,4 +1,4 @@
-import 'package:calendar_exemple/event.dart';
+import 'package:calendar_exemple/appointment.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 
@@ -21,9 +21,9 @@ class EventMonthlyTable extends StatelessWidget {
   final TimeOfDay startTime;
   final TimeOfDay endTime;
   final double cellHeight;
-  final List<Event> events;
+  final List<Appointment> events;
   final Widget Function(Cell cell) cellBuilder;
-  final Widget Function(int index, Event event) eventBuilder;
+  final Widget Function(int index, Appointment event) eventBuilder;
 
   @override
   Widget build(BuildContext context) {
