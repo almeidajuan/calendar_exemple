@@ -1,5 +1,5 @@
 import 'package:calendar_exemple/cale_format.dart';
-import 'package:calendar_exemple/event.dart';
+import 'package:calendar_exemple/appointment.dart';
 import 'package:flutter/material.dart';
 
 class AppointmentStore extends ChangeNotifier {
@@ -7,32 +7,32 @@ class AppointmentStore extends ChangeNotifier {
 
   CaleFormat get calendar => _calendar;
 
-  final List<Event> _appointments = [
-    Event(
+  final List<Appointment> _appointments = [
+    Appointment(
       title: 'Event 01',
       startAt: DateTime.utc(2024, 04, 28, 08, 00),
       endAt: DateTime.utc(2024, 04, 28, 09, 00),
     ),
-    Event(
+    Appointment(
       title: 'Event 02',
       startAt: DateTime.utc(2024, 04, 30, 09, 00),
       endAt: DateTime.utc(2024, 04, 30, 09, 30),
     ),
-    Event(
+    Appointment(
       title: 'Event 03',
       startAt: DateTime.utc(2024, 05, 01, 10, 00),
       endAt: DateTime.utc(2024, 05, 01, 11, 45),
     ),
-    Event(
+    Appointment(
       title: 'Event 03',
       startAt: DateTime.utc(2024, 05, 07, 10, 00),
-      endAt: DateTime.utc(2024, 05, 07, 10, 45),
+      endAt: DateTime.utc(2024, 05, 07, 10, 55),
     ),
   ];
 
-  List<Event> get clinicalAppointments => _appointments;
+  List<Appointment> get clinicalAppointments => _appointments;
 
-  Future<void> addAppointments(Event event) async {
+  Future<void> addAppointments(Appointment event) async {
     _appointments.add(event);
     notifyListeners();
   }
